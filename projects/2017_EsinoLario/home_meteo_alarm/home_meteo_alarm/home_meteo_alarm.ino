@@ -1,6 +1,6 @@
-// ** Home Meteo Alarm **  by Fabio Biffi
-// Project made at the wikicourse "Design and program interactive objects", held by Marco Lurati and Giovanni Profeta in Esino Lario (Italy), on July 2017.
-
+/* ** Home Meteo Alarm ** by Fabio Biffi
+ * Project made at the wikicourse "Design and program interactive objects", held by Marco Lurati and Giovanni Profeta in Esino Lario (Italy), on July 2017.
+ */
 
 #include <Time.h>
 #include <TimeLib.h>
