@@ -1,0 +1,5 @@
+Delay
+by Alberto Morabito
+
+Delay è un programma che permette di osservare il tempo di percorrenza di una pallina che rotola su un piano inclinato. Un pulsante avvia il movimento della pallina, mentre il potenziometro regola la pendenza del piano. Attraverso un’interfaccia grafica è possibile osservare il tempo impiegato dalla pallina e la pendenza del piano.
+Il progetto si basa sull’esperimento di Galileo, realizzato nel XVII secolo, per il calcolo della formula dell’accelerazione in un piano inclinato.

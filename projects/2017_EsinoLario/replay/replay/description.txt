@@ -1,0 +1,4 @@
+Replay
+by Patrick Viglienghi
+
+Replay è un oggetto che registra e riproduce una sequenza di note. Il suono generato può essere alterato in base alla pressione del dito su un sensore di pressione. Inoltre, è possibile variarne la velocità grazie a un potenziometro. I led colorati indicano il suono che è stato registrato.

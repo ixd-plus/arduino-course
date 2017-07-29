@@ -1,0 +1,4 @@
+Magnets Game
+by Davide Tomì
+
+Magnets game è un gioco interattivo ispirato al gioco da tavola Klask. L’obiettivo è quello di fare più punti possibili portando la pallina nella buca attraverso l’uso di un magnete. Dei led segnano il passare del tempo e i punti. Il vincitore del gioco sarà colui che avrà fatto più punti prima dello scadere del tempo.
