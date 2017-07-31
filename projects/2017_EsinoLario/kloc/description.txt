@@ -1,0 +1,4 @@
+Kloc
+by Enea Papaleo
+
+Kloc è un orologio digitale con tre funzionalità. Esso è in grado di contare i minuti e secondi. Può essere settato in modalità conto alla rovescia (tramite un potenziometro è possibile programmare un tempo che va dai 10 secondi ai 5 minuti). Inoltre, tramite un’interfaccia grafica, permette di impostare la sveglia.

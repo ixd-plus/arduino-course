@@ -1,0 +1,4 @@
+Time and Light
+by Mario Gionfini
+
+Time and light è una meridiana elettronica. Un sensore di luce, mosso da un servo motore, scannerizza un angolo di 110° e successivamente si posiziona nella direzione di maggiore luminosità. In funzione della posizione e dell’orientamento (determinati tramite la bussola) è possibile stabilire l’ora.

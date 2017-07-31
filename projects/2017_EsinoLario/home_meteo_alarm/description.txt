@@ -1,0 +1,4 @@
+Home Meteo Alarm
+by Fabio Biffi
+
+Il progetto è una replica domestica di un pluviometro. Un sensore ad ultrasuoni, posto sul mini pluviometro, rileva la quantità di pioggia che cade. Al superamento di una determinata quantità di pioggia in un tempo prefissato, scatta un segnale di avvertimento luminoso e sonoro che allerta l’utente.
