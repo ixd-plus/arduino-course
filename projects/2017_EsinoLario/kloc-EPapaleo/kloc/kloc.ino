@@ -22,6 +22,12 @@
 #include<Time.h>
 #include<TimeLib.h>
 
+// Declaring a constant in the global namespace, that's not a great idea, huh?
+// Let's remove it here, it doesn't seem to be used anywhere else...
+#ifdef SERIAL
+# undef SERIAL
+#endif
+
 #define MODE_LED_FIRST_PIN 5
 #define MODE_LED_SECOND_PIN 6
 #define MODE_BUTTON_PIN 2
@@ -62,10 +68,6 @@ public:
   unsigned int Read();
 };
 
-#ifdef SERIAL
-# undef SERIAL
-#endif
-
 namespace Mode {
   enum Mode {
     CLOCK, TIMER, SERIAL, STANDBY
@@ -97,78 +99,15 @@ class Adafruit_NeoPixel ledStrip = Adafruit_NeoPixel(LED_STRIP_LEDS, LED_STRIP_P
 class Potentiometer timerChooserPotentiometer = Potentiometer(POTENTIOMETER_PIN);
 class Button timerConfirmButton = Button(TIMER_CONFIRM_BUTTON_PIN);
 
-void CheckButtonForMode();
-void DeferModeCall();
-void HandleClock();
-void HandleTimer();
-void HandleSerial();
-void CheckForWakeUpCall();
+void Setup();
+void Loop();
 
 void setup() {
-  Serial.begin(RATE_SPEED);
-  ledStrip.begin();
-  for (int i = 0; i < LED_STRIP_LEDS; ++i) ledStrip.setPixelColor(i, ledStrip.Color(0, 0, 0));
-  ledStrip.show();
-  Display::colors[0] = ledStrip.Color(255, 128, 0);
-  Display::colors[1] = ledStrip.Color(255, 0, 128);
-  Display::colors[2] = ledStrip.Color(255, 255, 255);
-  Mode::CycleMode(&currentMode);
-  Mode::SwitchModeToLed(currentMode, &firstModeLed, &secondModeLed);
-  while (!Serial);
+  Setup();
 }
 
 void loop() {
-  CheckButtonForMode();
-  DeferModeCall();
+  Loop();
 }
 
-void CheckButtonForMode() {
-  static long int toggleDelay = 0;
-  if (toggleDelay > 0) {
-    --toggleDelay;
-    return;
-  }
-  if (!!modeSwitchButton.Read()) {
-    Mode::CycleMode(&currentMode);
-    Mode::SwitchModeToLed(currentMode, &firstModeLed, &secondModeLed);
-    for (int i = 0; i < LED_STRIP_LEDS; ++i) ledStrip.setPixelColor(i, ledStrip.Color(0, 0, 0));
-    ledStrip.show();
-    toggleDelay = 100000L;
-  }
-}
-
-void DeferModeCall() {
-  switch(currentMode) {
-    case Mode::CLOCK:
-      HandleClock();
-      break;
-    case Mode::TIMER:
-      HandleTimer();
-      break;
-    case Mode::SERIAL:
-      HandleSerial();
-      break;
-    case Mode::STANDBY:
-    default:
-      CheckForWakeUpCall();
-  }
-}
-
-void CheckForWakeUpCall() {
-  if (Serial.available() > 0) {
-    while(true) {
-      byte in = '\0';
-      while (in != '`') {
-        in = Serial.read();
-        if (in == 0xFF) continue; 
-      }
-      String call = Serial.readStringUntil(';');
-      if (!String("WAKEUP").equals(call)) continue;
-      Serial.println(":WOKEN");
-      Mode::CycleMode(&currentMode);
-      Mode::SwitchModeToLed(currentMode, &firstModeLed, &secondModeLed);
-      break;
-    }
-  }
-}
 
