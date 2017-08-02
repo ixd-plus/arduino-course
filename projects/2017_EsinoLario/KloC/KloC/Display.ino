@@ -18,21 +18,13 @@
  * Contact information:
  * E-mail: thesilkminer <at> outlook <dot> com
  */
-Button::Button(const int pin) {
-  this->pin = pin;
-  pinMode(pin, INPUT);
-}
+namespace Display {
+  short int GetLedMatchingMinute(const int minute) {
+    return minuteToLed[minute];
+  }
 
-[[deprecated]]
-int Button::Read() const {
-  return digitalRead(this->pin);
-}
-
-bool Button::IsPressed() const {
-  return static_cast<bool>(digitalRead(this->pin));
-}
-
-Button::operator bool() const {
-  return this->IsPressed();
+  uint32_t GetMatchingLedColor(const int minute) {
+    return colors[minute % 3];
+  }
 }
 
