@@ -34,7 +34,7 @@ void Setup() {
   Display::colors[1] = ledStrip.Color(255, 0, 128);
   Display::colors[2] = ledStrip.Color(255, 255, 255);
   Mode::CycleMode(&currentMode);
-  Mode::SwitchModeToLed(currentMode, &firstModeLed, &secondModeLed);
+  Mode::SwitchModeToLed(currentMode, firstModeLed, secondModeLed);
   while (!Serial);
 }
 
@@ -51,7 +51,7 @@ void CheckButtonForMode() {
   }
   if (!!modeSwitchButton.Read()) {
     Mode::CycleMode(&currentMode);
-    Mode::SwitchModeToLed(currentMode, &firstModeLed, &secondModeLed);
+    Mode::SwitchModeToLed(currentMode, firstModeLed, secondModeLed);
     for (int i = 0; i < LED_STRIP_LEDS; ++i) ledStrip.setPixelColor(i, ledStrip.Color(0, 0, 0));
     ledStrip.show();
     toggleDelay = 100000L;
@@ -87,7 +87,7 @@ void CheckForWakeUpCall() {
       if (!String("WAKEUP").equals(call)) continue;
       Serial.println(":WOKEN");
       Mode::CycleMode(&currentMode);
-      Mode::SwitchModeToLed(currentMode, &firstModeLed, &secondModeLed);
+      Mode::SwitchModeToLed(currentMode, firstModeLed, secondModeLed);
       break;
     }
   }

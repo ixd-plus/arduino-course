@@ -28,9 +28,9 @@ void HandleTimer() {
   static bool hasTimer = false;
   static bool hasBlinked = false;
   static bool hasReached = false;
-  static time_t startTime = NULL;
-  static int countdownValue = NULL;
-  static time_t endTime = NULL;
+  static time_t startTime = 0;
+  static int countdownValue = 0;
+  static time_t endTime = 0;
   if (hasTimer) {
     if (!hasReached) hasReached = CheckTimer(&hasBlinked, &endTime, countdownValue);
     if (!hasReached) return;
@@ -41,9 +41,9 @@ void HandleTimer() {
     hasTimer = false;
     hasReached = false;
     hasBlinked = false;
-    startTime = NULL;
-    countdownValue = NULL;
-    endTime = NULL;
+    startTime = 0;
+    countdownValue = 0;
+    endTime = 0;
     Serial.println(":TIMER>ENDED");
     return;
   }

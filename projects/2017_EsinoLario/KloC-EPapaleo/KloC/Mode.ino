@@ -19,24 +19,24 @@
  * E-mail: thesilkminer <at> outlook <dot> com
  */
 namespace Mode {
-  void SwitchModeToLed(const enum Mode mode, const class Led* first, const class Led* second) {
+  void SwitchModeToLed(const enum Mode mode, class Led first, class Led second) {
     switch (mode) {
       case CLOCK:
-        first->TurnOn();
-        second->TurnOff();
+        first.TurnOn();
+        second.TurnOff();
         break;
       case TIMER:
-        first->TurnOff();
-        second->TurnOn();
+        first.TurnOff();
+        second.TurnOn();
         break;
       case SERIAL:
-        first->TurnOn();
-        second->TurnOn();
+        first.TurnOn();
+        second.TurnOn();
         break;
       case STANDBY:
       default:
-        first->TurnOff();
-        second->TurnOff();
+        first.TurnOff();
+        second.TurnOff();
         break;
     }
   }
@@ -60,7 +60,7 @@ namespace Mode {
     Serial.println(*mode == CLOCK? "CLOCK" : *mode == TIMER? "TIMER" : *mode == SERIAL? "SERIAL" : "STANDBY");
   }
 
-  void CycleModeAndUpdateLeds(enum Mode* mode, const class Led* first, const class Led* second) {
+  void CycleModeAndUpdateLeds(enum Mode* mode, class Led first, class Led second) {
     CycleMode(mode);
     SwitchModeToLed(*mode, first, second);
   }

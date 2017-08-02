@@ -27,7 +27,7 @@ unsigned long long int ParseTime(const String);
 
 void HandleClock() {
   static enum Display::Display whatWeShouldDisplay = Display::MINUTES;
-  static int previousTimeToDisplay = NULL;
+  static int previousTimeToDisplay = 0;
   
   TryReadCurrentTimeMillisFromSerial();
   time_t currentTimeMillis = now();
@@ -67,7 +67,7 @@ void HandleWhatWeShouldDisplay(enum Display::Display* disp, int* previousTimeToD
 void ResetStrip(int* i) {
   for (int i = 0; i < LED_STRIP_LEDS; ++i) ledStrip.setPixelColor(i, ledStrip.Color(0, 0, 0));
   ledStrip.show();
-  *i = NULL;
+  *i = 0;
 }
 
 int GetTimeToDisplay(const time_t time, const enum Display::Display what) {

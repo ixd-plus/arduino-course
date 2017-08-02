@@ -161,10 +161,10 @@ namespace Mode {
    * Displays the mode on the LED mode indicator.
    * 
    * @param The mode to display.
-   * @param A pointer to the first of the two leds.
-   * @param A pointer to the second of the two leds.
+   * @param The first of the two leds.
+   * @param The second of the two leds.
    */
-  void SwitchModeToLed(const enum Mode, const class Led*, const class Led*);
+  void SwitchModeToLed(const enum Mode, class Led, class Led);
   /**
    * Cycles the current mode, moving onto the next one.
    * 
@@ -175,10 +175,10 @@ namespace Mode {
    * Cycles the current mode and displays the new one on the led indicator.
    * 
    * @param A pointer to the current mode, which will be used to set the new mode.
-   * @param A pointer to the first of the two leds.
-   * @param A pointer to the second of the two leds.
+   * @param The first of the two leds.
+   * @param The second of the two leds.
    */
-  void CycleModeAndUpdateLeds(enum Mode*, const class Led*, const class Led*);
+  void CycleModeAndUpdateLeds(enum Mode*, class Led, class Led);
 }
 
 namespace Display {
