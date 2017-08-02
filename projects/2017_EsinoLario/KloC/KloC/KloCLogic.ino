@@ -20,6 +20,7 @@
  */
 bool BeginSerialCommunication();
 void CheckButtonForMode();
+void CheckSerialForMode();
 void DeferModeCall();
 void HandleClock();
 void HandleTimer();
@@ -97,6 +98,7 @@ bool BeginSerialCommunication() {
 
 void Loop() {
   CheckButtonForMode();
+  CheckSerialForMode();
   DeferModeCall();
 }
 
@@ -112,6 +114,27 @@ void CheckButtonForMode() {
     ledStrip.show();
     toggleDelay = 100000L;
   }
+}
+
+void CheckSerialForMode() {
+  if (!SerialPort::CanCommunicateWithSerial()) return;
+  if (currentMode == Mode::STANDBY) return;
+  if (Serial.available() <= 0) return;
+  while(true) {
+      byte in = '\0';
+      while (in != '`') {
+        in = Serial.read();
+        if (in == 0xFF) continue; 
+      }
+      String call = Serial.readStringUntil('>');
+      if (!String("MODE").equals(call)) continue;
+      call = Serial.readStringUntil(';');
+      auto newMode = String("CLOCK").equals(call)? Mode::CLOCK : String("TIMER").equals(call)? Mode::TIMER : String("SERIAL").equals(call)? Mode::SERIAL : Mode::STANDBY;
+      while (currentMode != newMode) {
+        Mode::CycleModeAndUpdateLeds(&currentMode, firstModeLed, secondModeLed);
+      }
+      break;
+    }
 }
 
 void DeferModeCall() {
@@ -143,8 +166,7 @@ void CheckForWakeUpCall() {
       String call = Serial.readStringUntil(';');
       if (!String("WAKEUP").equals(call)) continue;
       Serial.println(":WOKEN");
-      Mode::CycleMode(&currentMode);
-      Mode::SwitchModeToLed(currentMode, firstModeLed, secondModeLed);
+      Mode::CycleModeAndUpdateLeds(&currentMode, firstModeLed, secondModeLed);
       break;
     }
   }
