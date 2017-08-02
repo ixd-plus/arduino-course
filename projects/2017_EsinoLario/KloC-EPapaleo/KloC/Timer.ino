@@ -51,7 +51,7 @@ void HandleTimer() {
     --toggleDelay;
     return;
   }
-  if (!!timerConfirmButton.Read()) {
+  if (timerConfirmButton) {
     GetTimerAndStartProcess(&hasTimer, &startTime, &endTime, &countdownValue);
     toggleDelay = 100000L;
   }
@@ -75,8 +75,8 @@ void GetTimerAndStartProcess(bool* hasTimer, time_t* startTime, time_t* endTime,
 }
 
 bool CheckTimer(bool* hasBlinked, const time_t* endTime, const int val) {
-  const time_t nowTime = now();
-  const time_t difference = *endTime - nowTime;
+  const auto nowTime = now();
+  const auto difference = *endTime - nowTime;
   Serial.print(":TIMER>DIFF>");
   Serial.println(difference);
   if (difference <= 0) {

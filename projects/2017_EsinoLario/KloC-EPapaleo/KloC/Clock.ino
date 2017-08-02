@@ -23,14 +23,14 @@ void HandleWhatWeShouldDisplay(enum Display::Display*, int*);
 void ResetStrip(int*);
 int GetTimeToDisplay(const time_t, const enum Display::Display);
 void DisplayValueOnStrip(const int);
-unsigned long long int ParseTime(const String);
+unsigned long int ParseTime(const String);
 
 void HandleClock() {
   static enum Display::Display whatWeShouldDisplay = Display::MINUTES;
   static int previousTimeToDisplay = 0;
   
   TryReadCurrentTimeMillisFromSerial();
-  time_t currentTimeMillis = now();
+  auto currentTimeMillis = now();
 
   HandleWhatWeShouldDisplay(&whatWeShouldDisplay, &previousTimeToDisplay);
   const int timeToDisplay = GetTimeToDisplay(currentTimeMillis, whatWeShouldDisplay);
@@ -48,7 +48,7 @@ void HandleWhatWeShouldDisplay(enum Display::Display* disp, int* previousTimeToD
     --toggleDelay;
     return;
   }
-  if (!!timerConfirmButton.Read()) {
+  if (timerConfirmButton) {
     switch(*disp) {
       case Display::SECONDS:
         *disp = Display::MINUTES;
@@ -65,7 +65,7 @@ void HandleWhatWeShouldDisplay(enum Display::Display* disp, int* previousTimeToD
 }
 
 void ResetStrip(int* i) {
-  for (int i = 0; i < LED_STRIP_LEDS; ++i) ledStrip.setPixelColor(i, ledStrip.Color(0, 0, 0));
+  ledStrip.clear();
   ledStrip.show();
   *i = 0;
 }
@@ -82,13 +82,14 @@ int GetTimeToDisplay(const time_t time, const enum Display::Display what) {
 
 void DisplayValueOnStrip(const int value) {
   if (value <= 0 || value >= 60) {
-    for (int i = 0; i < LED_STRIP_LEDS; ++i) ledStrip.setPixelColor(i, ledStrip.Color(0, 0, 0));
+    ledStrip.clear();
     ledStrip.show();
   }
-  short int led = Display::minuteToLed[value];
-  uint32_t color = Display::colors[value % 3];
+  auto led = Display::minuteToLed[value];
+  auto color = Display::colors[value % 3];
   ledStrip.setPixelColor(led, color);
   for (int i = 0; i < led; ++i) ledStrip.setPixelColor(i, Display::colors[2]);
+  for (int i = led + 1; i < LED_STRIP_LEDS; ++i) ledStrip.setPixelColor(i, ledStrip.Color(0, 0, 0));
   ledStrip.show();
 }
 
@@ -101,7 +102,7 @@ void TryReadCurrentTimeMillisFromSerial() {
         if (in == 0xFF) continue; 
       }
       String time = Serial.readStringUntil(';');
-      unsigned long long int seconds = ParseTime(time);
+      unsigned long int seconds = ParseTime(time);
       setTime(seconds);
       break;
     }
@@ -109,9 +110,9 @@ void TryReadCurrentTimeMillisFromSerial() {
   }
 }
 
-unsigned long long int ParseTime(const String givenTime) {
+unsigned long int ParseTime(const String givenTime) {
   char time[givenTime.length() + 5];
   givenTime.toCharArray(time, sizeof(time));
-  return atol(time);
+  return static_cast<unsigned long int>(atol(time));
 }
 

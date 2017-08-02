@@ -23,7 +23,7 @@
 #include<TimeLib.h>
 
 // Declaring a constant in the global namespace, that's not a great idea, huh?
-// LIBRARY WRITER, clean up after you've used them, thank you. Or at least document it
+// LIBRARY WRITER, clean up after you've used them, thank you. Or at least document it.
 // Let's remove it here, it doesn't seem to be used anywhere else...
 #ifdef SERIAL
 # undef SERIAL
