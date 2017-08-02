@@ -18,7 +18,51 @@
  * Contact information:
  * E-mail: thesilkminer <at> outlook <dot> com
  */
+bool AttemptConnection();
+
 void HandleSerial() {
+  if (!AttemptConnection()) {
+    Mode::CycleModeAndUpdateLeds(&currentMode, firstModeLed, secondModeLed);
+    Mode::CycleModeAndUpdateLeds(&currentMode, firstModeLed, secondModeLed);
+    return;
+  }
+}
+
+bool AttemptConnection() {
+  static bool connected = false;
   
+  if (connected) return true;
+  
+  if (SerialPort::CanCommunicateWithSerial()) {
+    return true;
+  } else {
+    Serial.println(":SYN");
+    auto counter = 0;
+    auto estabilished = false;
+    while (true) {
+      if (estabilished || counter >= 5) {
+        if (!estabilished) Serial.println(":CONNECTION>FAILED");
+        break;
+      }
+      if (Serial.available() > 0) {
+        while(true) {
+          byte in = '\0';
+          while (in != '`') {
+            in = Serial.read();
+            if (in == 0xFF) continue; 
+          }
+          String call = Serial.readStringUntil(';');
+          if (!String("ACK").equals(call)) continue;
+          Serial.println(":CONNECTION>ESTABILISHED");
+          estabilished = true;
+          break;
+        }
+      }
+      ++counter;
+      delay(1000); // Wait one second after every call
+    }
+    SerialPort::hasSerial = estabilished;
+    return estabilished;
+  }
 }
 

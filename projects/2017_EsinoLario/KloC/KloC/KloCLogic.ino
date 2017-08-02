@@ -18,6 +18,7 @@
  * Contact information:
  * E-mail: thesilkminer <at> outlook <dot> com
  */
+bool BeginSerialCommunication();
 void CheckButtonForMode();
 void DeferModeCall();
 void HandleClock();
@@ -33,8 +34,65 @@ void Setup() {
   Display::colors[0] = ledStrip.Color(255, 128, 0);
   Display::colors[1] = ledStrip.Color(255, 0, 128);
   Display::colors[2] = ledStrip.Color(255, 255, 255);
-  Mode::CycleModeAndUpdateLeds(&currentMode, firstModeLed, secondModeLed);
   while (!Serial);
+  firstModeLed.TurnOn();
+  secondModeLed.TurnOn();
+  if (BeginSerialCommunication()) {
+    for (auto i = 0; i < 3; ++i ) {
+      firstModeLed.TurnOff();
+      secondModeLed.TurnOff();
+      delay(100);
+      firstModeLed.TurnOn();
+      secondModeLed.TurnOn();
+      delay(100); 
+    }
+  } else {
+    for (auto i = 0; i < 3; ++i) {
+      firstModeLed.TurnOff();
+      secondModeLed.TurnOff();
+      delay(100);
+      firstModeLed.TurnOn();
+      delay(100);
+      secondModeLed.TurnOn();
+      delay(150);
+      firstModeLed.TurnOff();
+      delay(100);
+    }
+  }
+  firstModeLed.TurnOff();
+  secondModeLed.TurnOff();
+  delay(300);
+  Mode::CycleModeAndUpdateLeds(&currentMode, firstModeLed, secondModeLed);
+}
+
+bool BeginSerialCommunication() {
+  Serial.println(":SYN");
+  auto counter = 0;
+  auto estabilished = false;
+  while (true) {
+    if (estabilished || counter >= 30) {
+      if (!estabilished) Serial.println(":CONNECTION>FAILED");
+      break; // Wait half a minute maximum, then break out and wait for a SYN/ACK request from the Java controller.
+    }
+    if (Serial.available() > 0) {
+      while(true) {
+        byte in = '\0';
+        while (in != '`') {
+          in = Serial.read();
+          if (in == 0xFF) continue; 
+        }
+        String call = Serial.readStringUntil(';');
+        if (!String("ACK").equals(call)) continue;
+        Serial.println(":CONNECTION>ESTABILISHED");
+        estabilished = true;
+        break;
+      }
+    }
+    ++counter;
+    delay(1000); // Wait one second after every call
+  }
+  SerialPort::hasSerial = estabilished;
+  return estabilished;
 }
 
 void Loop() {
@@ -74,6 +132,7 @@ void DeferModeCall() {
 }
 
 void CheckForWakeUpCall() {
+  if (!SerialPort::CanCommunicateWithSerial()) return;
   if (Serial.available() > 0) {
     while(true) {
       byte in = '\0';

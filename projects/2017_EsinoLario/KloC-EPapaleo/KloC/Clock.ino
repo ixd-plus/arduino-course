@@ -94,6 +94,7 @@ void DisplayValueOnStrip(const int value) {
 }
 
 void TryReadCurrentTimeMillisFromSerial() {
+  if (!SerialPort::CanCommunicateWithSerial()) return;
   if (Serial.available() > 0) {
     while(true) {
       byte in = '\0';

@@ -229,6 +229,25 @@ namespace Display {
   uint32_t GetMatchingLedColor(const int);
 }
 
+namespace SerialPort {
+  /**
+   * Identifies if the current session can communicate through the serial port with a companion app.
+   */
+  bool hasSerial{false};
+
+  /**
+   * Returns if the Arduino controller can communicate through a serial port.
+   * 
+   * <p>Before attempting to communicate through the serial port, you should check the result value of
+   * this function.</p>
+   * 
+   * <p>It is suggested to use this function instead of accessing {@code hasSerial} directly.</p>
+   * 
+   * @return If there's somebody listening on the serial port.
+   */
+  bool CanCommunicateWithSerial();
+}
+
 class Led firstModeLed = Led(MODE_LED_FIRST_PIN);
 class Led secondModeLed = Led(MODE_LED_SECOND_PIN);
 class Button modeSwitchButton = Button(MODE_BUTTON_PIN);
