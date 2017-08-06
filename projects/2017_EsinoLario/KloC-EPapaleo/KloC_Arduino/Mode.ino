@@ -64,5 +64,14 @@ namespace Mode {
     CycleMode(mode);
     SwitchModeToLed(*mode, first, second);
   }
+
+  enum Mode GetModeFromString(const String string) {
+    static const String clock = String("CLOCK");
+    static const String timer = String("TIMER");
+    static const String serial = String("SERIAL");
+    static const String standby = String("STANDBY");
+
+    return clock.equals(string)? CLOCK : timer.equals(string)? TIMER : serial.equals(string)? SERIAL : STANDBY;
+  }
 }
 

@@ -19,6 +19,7 @@
  * E-mail: thesilkminer <at> outlook <dot> com
  */
 #include<Adafruit_NeoPixel.h>
+#include<QueueList.h>
 #include<Time.h>
 #include<TimeLib.h>
 
@@ -179,6 +180,15 @@ namespace Mode {
    * @param The second of the two leds.
    */
   void CycleModeAndUpdateLeds(enum Mode*, class Led, class Led);
+  /**
+   * Gets the mode that matches the given string.
+   * 
+   * <p>If no mode matches, then {@code STANDBY} is returned.
+   * 
+   * @param The enum mode.
+   * @return The mode that matches the given string.
+   */
+  enum Mode GetModeFromString(const String);
 }
 
 namespace Display {
@@ -234,6 +244,11 @@ namespace SerialPort {
    * Identifies if the current session can communicate through the serial port with a companion app.
    */
   bool hasSerial{false};
+
+  /**
+   * Queue used to store and manage all the various incoming messages from the serial port.
+   */
+  class QueueList<String> incomingMessagesQueue{QueueList<String>()};
 
   /**
    * Returns if the Arduino controller can communicate through a serial port.

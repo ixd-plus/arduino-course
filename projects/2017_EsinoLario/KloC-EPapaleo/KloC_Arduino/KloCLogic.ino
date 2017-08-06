@@ -19,6 +19,7 @@
  * E-mail: thesilkminer <at> outlook <dot> com
  */
 bool BeginSerialCommunication();
+void CheckSerialForMessages();
 void CheckButtonForMode();
 void CheckSerialForMode();
 void DeferModeCall();
@@ -97,9 +98,23 @@ bool BeginSerialCommunication() {
 }
 
 void Loop() {
+  CheckSerialForMessages();
   CheckButtonForMode();
   CheckSerialForMode();
   DeferModeCall();
+}
+
+void CheckSerialForMessages() {
+  if (!SerialPort::CanCommunicateWithSerial()) return;
+  if (currentMode == Mode::STANDBY) return;
+  if (Serial.available() <= 0) return;
+  byte in = '\0';
+  while (in != '`') {
+    in = Serial.read();
+    if (in == 0xFF) continue; 
+  }
+  auto call = Serial.readStringUntil(';');
+  SerialPort::incomingMessagesQueue.push(call);
 }
 
 void CheckButtonForMode() {
@@ -119,22 +134,15 @@ void CheckButtonForMode() {
 void CheckSerialForMode() {
   if (!SerialPort::CanCommunicateWithSerial()) return;
   if (currentMode == Mode::STANDBY) return;
-  if (Serial.available() <= 0) return;
-  while(true) {
-      byte in = '\0';
-      while (in != '`') {
-        in = Serial.read();
-        if (in == 0xFF) continue; 
-      }
-      String call = Serial.readStringUntil('>');
-      if (!String("MODE").equals(call)) continue;
-      call = Serial.readStringUntil(';');
-      auto newMode = String("CLOCK").equals(call)? Mode::CLOCK : String("TIMER").equals(call)? Mode::TIMER : String("SERIAL").equals(call)? Mode::SERIAL : Mode::STANDBY;
-      while (currentMode != newMode) {
-        Mode::CycleModeAndUpdateLeds(&currentMode, firstModeLed, secondModeLed);
-      }
-      break;
-    }
+  if (SerialPort::incomingMessagesQueue.count() <= 0) return;
+  const auto message = SerialPort::incomingMessagesQueue.peek();
+  if (!message.startsWith("MODE")) return;
+  SerialPort::incomingMessagesQueue.pop();
+  const auto newMode = message.substring(String("MODE>").length());
+  const auto mode = Mode::GetModeFromString(newMode);
+  while (currentMode != mode) {
+    Mode::CycleModeAndUpdateLeds(&currentMode, firstModeLed, secondModeLed);
+  }
 }
 
 void DeferModeCall() {

@@ -95,20 +95,15 @@ void DisplayValueOnStrip(const int value) {
 
 void TryReadCurrentTimeMillisFromSerial() {
   if (!SerialPort::CanCommunicateWithSerial()) return;
-  if (Serial.available() > 0) {
-    while(true) {
-      byte in = '\0';
-      while (in != '`') {
-        in = Serial.read();
-        if (in == 0xFF) continue; 
-      }
-      String time = Serial.readStringUntil(';');
-      unsigned long int seconds = ParseTime(time);
-      setTime(seconds);
-      break;
-    }
-    Serial.println(":GOTTEN");
-  }
+  if (SerialPort::incomingMessagesQueue.count() <= 0) return;
+  const auto message = SerialPort::incomingMessagesQueue.peek();
+  if (!message.startsWith("CLOCK")) return;
+  if (!message.substring(String("CLOCK>").length()).startsWith("SYNC")) return;
+  SerialPort::incomingMessagesQueue.pop();
+  const auto sync = message.substring(String("CLOCK>SYNC>").length());
+  const auto seconds = ParseTime(sync);
+  setTime(seconds);
+  Serial.println(":CLOCK>SYNC>GOTTEN");
 }
 
 unsigned long int ParseTime(const String givenTime) {
