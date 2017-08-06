@@ -1,7 +1,3 @@
-/* ** Kloc ** by Enea Papaleo
- * Project made at the wikicourse "Design and program interactive objects", held by Marco Lurati and Giovanni Profeta in Esino Lario (Italy), on July 2017.
- */
-
 /*
  * KloC Arduino Controller
  * Copyright (C) 2017  TheSilkMiner
@@ -22,81 +18,143 @@
  * Contact information:
  * E-mail: thesilkminer <at> outlook <dot> com
  */
-void TryReadCurrentTimeMillisFromSerial();
-void HandleWhatWeShouldDisplay(enum Display::Display*, int*);
-void ResetStrip(int*);
-int GetTimeToDisplay(const time_t, const enum Display::Display);
-void DisplayValueOnStrip(const int);
-unsigned long long int ParseTime(const String);
+#include<Adafruit_NeoPixel.h>
+#include<Time.h>
+#include<TimeLib.h>
 
-void HandleClock() {
-  static enum Display::Display whatWeShouldDisplay = Display::MINUTES;
-  static int previousTimeToDisplay = NULL;
-  
-  TryReadCurrentTimeMillisFromSerial();
-  time_t currentTimeMillis = now();
+#define MODE_LED_FIRST_PIN 5
+#define MODE_LED_SECOND_PIN 6
+#define MODE_BUTTON_PIN 2
+#define TIMER_CONFIRM_BUTTON_PIN 4
+#define POTENTIOMETER_PIN A0
+#define LED_STRIP_PIN 10
 
-  HandleWhatWeShouldDisplay(&whatWeShouldDisplay, &previousTimeToDisplay);
-  const int timeToDisplay = GetTimeToDisplay(currentTimeMillis, whatWeShouldDisplay);
-  if (previousTimeToDisplay == timeToDisplay) return;
+#define LED_STRIP_LEDS 20
 
-  Serial.print(":CLOCK>DISP>VAL>");
-  Serial.println(timeToDisplay);
-  DisplayValueOnStrip(timeToDisplay);
-  previousTimeToDisplay = timeToDisplay;
+#define RATE_SPEED 9600
+
+class Led {
+private:
+  int pin;
+  int level;
+  void SendLevel() const;
+public:
+  Led(const int);
+  void SetAndSendLevel(const int);
+  void UpdateAndSendLevel(const int);
+  void TurnOn();
+  void TurnOff();
+};
+
+class Button {
+private:
+  int pin;
+public:
+  Button(const int);
+  int Read() const;
+};
+
+class Potentiometer {
+private:
+  int pin;
+public:
+  Potentiometer(const int);
+  unsigned int Read();
+};
+
+#ifdef SERIAL
+# undef SERIAL
+#endif
+
+namespace Mode {
+  enum Mode {
+    CLOCK, TIMER, SERIAL, STANDBY
+  };
+
+  void SwitchModeToLed(const Mode, const Led*, const Led*);
+  void CycleMode(enum Mode*);
 }
 
-void HandleWhatWeShouldDisplay(enum Display::Display* disp, int* previousTimeToDisplay) {
+namespace Display {
+  enum Display {
+    SECONDS, MINUTES
+  };
+
+  short int minuteToLed[] = {0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8,
+                             9, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12, 12, 13, 13, 13, 14, 14, 14, 15, 15, 15,
+                             16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19};
+
+  uint32_t colors[] = {0, 0, 0};
+}
+
+class Led firstModeLed = Led(MODE_LED_FIRST_PIN);
+class Led secondModeLed = Led(MODE_LED_SECOND_PIN);
+class Button modeSwitchButton = Button(MODE_BUTTON_PIN);
+enum Mode::Mode currentMode = Mode::STANDBY;
+
+class Adafruit_NeoPixel ledStrip = Adafruit_NeoPixel(LED_STRIP_LEDS, LED_STRIP_PIN);
+
+class Potentiometer timerChooserPotentiometer = Potentiometer(POTENTIOMETER_PIN);
+class Button timerConfirmButton = Button(TIMER_CONFIRM_BUTTON_PIN);
+
+void CheckButtonForMode();
+void DeferModeCall();
+void HandleClock();
+void HandleTimer();
+void HandleSerial();
+void CheckForWakeUpCall();
+
+void setup() {
+  Serial.begin(RATE_SPEED);
+  ledStrip.begin();
+  for (int i = 0; i < LED_STRIP_LEDS; ++i) ledStrip.setPixelColor(i, ledStrip.Color(0, 0, 0));
+  ledStrip.show();
+  Display::colors[0] = ledStrip.Color(255, 128, 0);
+  Display::colors[1] = ledStrip.Color(255, 0, 128);
+  Display::colors[2] = ledStrip.Color(255, 255, 255);
+  Mode::CycleMode(&currentMode);
+  Mode::SwitchModeToLed(currentMode, &firstModeLed, &secondModeLed);
+  while (!Serial);
+}
+
+void loop() {
+  CheckButtonForMode();
+  DeferModeCall();
+}
+
+void CheckButtonForMode() {
   static long int toggleDelay = 0;
   if (toggleDelay > 0) {
     --toggleDelay;
     return;
   }
-  if (!!timerConfirmButton.Read()) {
-    switch(*disp) {
-      case Display::SECONDS:
-        *disp = Display::MINUTES;
-        break;
-      case Display::MINUTES:
-        *disp = Display::SECONDS;
-        break;
-    }
-    Serial.print(":CLOCK>DISP>");
-    Serial.println(*disp);
-    ResetStrip(previousTimeToDisplay);
-    toggleDelay = 10000L;
-  }
-}
-
-void ResetStrip(int* i) {
-  for (int i = 0; i < LED_STRIP_LEDS; ++i) ledStrip.setPixelColor(i, ledStrip.Color(0, 0, 0));
-  ledStrip.show();
-  *i = NULL;
-}
-
-int GetTimeToDisplay(const time_t time, const enum Display::Display what) {
-  switch(what) {
-    case Display::SECONDS:
-    default:
-      return second(time);
-    case Display::MINUTES:
-      return minute(time);
-  }
-}
-
-void DisplayValueOnStrip(const int value) {
-  if (value <= 0 || value >= 60) {
+  if (!!modeSwitchButton.Read()) {
+    Mode::CycleMode(&currentMode);
+    Mode::SwitchModeToLed(currentMode, &firstModeLed, &secondModeLed);
     for (int i = 0; i < LED_STRIP_LEDS; ++i) ledStrip.setPixelColor(i, ledStrip.Color(0, 0, 0));
     ledStrip.show();
+    toggleDelay = 100000L;
   }
-  short int led = Display::minuteToLed[value];
-  uint32_t color = Display::colors[value % 3];
-  ledStrip.setPixelColor(led, color);
-  for (int i = 0; i < led; ++i) ledStrip.setPixelColor(i, Display::colors[2]);
-  ledStrip.show();
 }
 
-void TryReadCurrentTimeMillisFromSerial() {
+void DeferModeCall() {
+  switch(currentMode) {
+    case Mode::CLOCK:
+      HandleClock();
+      break;
+    case Mode::TIMER:
+      HandleTimer();
+      break;
+    case Mode::SERIAL:
+      HandleSerial();
+      break;
+    case Mode::STANDBY:
+    default:
+      CheckForWakeUpCall();
+  }
+}
+
+void CheckForWakeUpCall() {
   if (Serial.available() > 0) {
     while(true) {
       byte in = '\0';
@@ -104,18 +162,13 @@ void TryReadCurrentTimeMillisFromSerial() {
         in = Serial.read();
         if (in == 0xFF) continue; 
       }
-      String time = Serial.readStringUntil(';');
-      unsigned long long int seconds = ParseTime(time);
-      setTime(seconds);
+      String call = Serial.readStringUntil(';');
+      if (!String("WAKEUP").equals(call)) continue;
+      Serial.println(":WOKEN");
+      Mode::CycleMode(&currentMode);
+      Mode::SwitchModeToLed(currentMode, &firstModeLed, &secondModeLed);
       break;
     }
-    Serial.println(":GOTTEN");
   }
-}
-
-unsigned long long int ParseTime(const String givenTime) {
-  char time[givenTime.length() + 5];
-  givenTime.toCharArray(time, sizeof(time));
-  return atol(time);
 }
 
