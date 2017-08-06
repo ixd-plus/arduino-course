@@ -1,0 +1,143 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+        maven {
+            name 'OpenMods Third Party'
+            url 'https://repo.openmods.info/artifactory/simple/thirdparty'
+        }
+    }
+    dependencies {
+        classpath group: 'com.github.jengelman.gradle.plugins', name: 'shadow', version: '1.2.3'
+        classpath group: 'net.thesilkminer.gradle.translationchecker', name: 'TranslationChecker', version: '1.1'
+    }
+}
+
+plugins {
+    id 'java'
+    id 'idea'
+    id 'eclipse' // Whatever, I still think you should move to Idea
+    id 'visual-studio' // I don't know who's the madman that may use this as their IDE instead of Idea, but... okay
+    id 'maven'
+    id 'com.github.ben-manes.versions' version '0.15.0'
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'findbugs'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+group 'net.thesilkminer.arduino.kloc'
+version '1.0-SNAPSHOT'
+archivesBaseName = 'KloC'
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+configurations {
+    shade
+    compile.extendsFrom shade
+}
+
+//noinspection SpellCheckingInspection
+dependencies {
+    // Guava
+    compile group: 'com.google.guava', name: 'guava', version: '12.0'
+    shade group: 'com.google.guava', name: 'guava', version: '12.0'
+
+    // Apache Commons-Lang3
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+    shade group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+
+    // Jetbrains Annotations
+    compile group: 'org.jetbrains', name: 'annotations', version: '15.0'
+    shade group: 'org.jetbrains', name: 'annotations', version: '15.0'
+
+    /*
+    // jRxTx
+    compile (group: 'org.openmuc', name: 'jrxtx', version: '1.0.0')
+    shade (group: 'org.openmuc', name: 'jrxtx', version: '1.0.0')
+    */
+
+    // JBiDiB RxTx 2
+    compile group: 'org.bidib.jbidib', name: 'jbidibc-rxtx-2.2', version: '1.6.0'
+    shade group: 'org.bidib.jbidib', name: 'jbidibc-rxtx-2.2', version: '1.6.0'
+
+    // RxTx Serial And Parallel I/O Binary Libraries
+    compile group: 'org.bidib.jbidib', name: 'bidib-rxtx-binaries', version: '2.2'
+    shade group: 'org.bidib.jbidib', name: 'bidib-rxtx-binaries', version: '2.2'
+
+    // JFoenix
+    compile group: 'com.jfoenix', name: 'jfoenix', version: '1.7.0'
+    shade group: 'com.jfoenix', name: 'jfoenix', version: '1.7.0'
+
+    // JUnit
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+ext.jarManifest = manifest {
+    attributes("Archive-Type": "jar")
+}
+
+ext.zipManifest = manifest {
+    attributes("Archive-Type": "zip")
+}
+
+ext.authorsManifest = manifest {
+    attributes("Author": "TheSilkMiner")
+}
+
+ext.runnableManifest = manifest {
+    attributes("Main-Class": "net.thesilkminer.arduino.kloc.KloC")
+}
+
+ext.shadowJarManifest = manifest {
+    attributes("Is-Shadow": "true")
+}
+
+ext.notShadowJarManifest = manifest {
+    attributes("Is-Shadow": "false")
+}
+
+ext.genericJarManifest = manifest {
+    from ext.jarManifest, ext.authorsManifest, ext.runnableManifest
+}
+
+jar {
+    manifest {
+        from project.genericJarManifest, project.notShadowJarManifest
+    }
+}
+
+//noinspection GrUnresolvedAccess
+shadowJar {
+    configurations = [project.configurations.shade]
+    manifest {
+        from project.genericJarManifest, project.shadowJarManifest
+    }
+}
+
+//noinspection GrUnresolvedAccess,GroovyAssignabilityCheck
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    //noinspection GrUnresolvedAccess
+    from sourceSets.main.allSource
+    manifest {
+        from project.notShadowJarManifest, project.authorsManifest, project.jarManifest
+    }
+}
+
+//noinspection GrUnresolvedAccess,GroovyAssignabilityCheck
+build.dependsOn shadowJar
+
+artifacts {
+    archives sourcesJar
+    archives shadowJar
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.5-rc-2'
+}
